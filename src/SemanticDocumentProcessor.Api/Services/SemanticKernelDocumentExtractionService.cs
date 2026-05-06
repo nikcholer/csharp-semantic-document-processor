@@ -24,37 +24,44 @@ public sealed class SemanticKernelDocumentExtractionService : IDocumentExtractio
         _settings = options.Value;
     }
 
-    public async Task<InvoiceData> ExtractInvoiceAsync(
+    public async Task<ExtractionServiceResult<InvoiceData>> ExtractInvoiceAsync(
         ReadOnlyMemory<byte> imageBytes,
         string contentType,
         CancellationToken cancellationToken)
     {
-        var content = await ExtractJsonAsync(
+        var extraction = await ExtractJsonAsync(
             imageBytes,
             contentType,
+            operation: "invoice_extraction",
             CreateInvoicePrompt(),
             cancellationToken);
 
-        return ParseInvoice(content);
+        return new ExtractionServiceResult<InvoiceData>(
+            ParseInvoice(extraction.Content),
+            extraction.TokenUsage);
     }
 
-    public async Task<ReceiptData> ExtractReceiptAsync(
+    public async Task<ExtractionServiceResult<ReceiptData>> ExtractReceiptAsync(
         ReadOnlyMemory<byte> imageBytes,
         string contentType,
         CancellationToken cancellationToken)
     {
-        var content = await ExtractJsonAsync(
+        var extraction = await ExtractJsonAsync(
             imageBytes,
             contentType,
+            operation: "receipt_extraction",
             CreateReceiptPrompt(),
             cancellationToken);
 
-        return ParseReceipt(content);
+        return new ExtractionServiceResult<ReceiptData>(
+            ParseReceipt(extraction.Content),
+            extraction.TokenUsage);
     }
 
-    private async Task<string?> ExtractJsonAsync(
+    private async Task<ModelCallResult> ExtractJsonAsync(
         ReadOnlyMemory<byte> imageBytes,
         string contentType,
+        string operation,
         string extractionPrompt,
         CancellationToken cancellationToken)
     {
@@ -77,7 +84,9 @@ public sealed class SemanticKernelDocumentExtractionService : IDocumentExtractio
                     _kernel,
                     cancellationToken);
 
-                return result.Content;
+                return new ModelCallResult(
+                    result.Content,
+                    ModelTokenUsageExtractor.FromContent(operation, _settings.ModelId, result));
             }
             catch (Exception ex) when (attempt < MaxModelCallAttempts && IsTransientModelFailure(ex))
             {
@@ -310,4 +319,6 @@ Rules:
             || message.Contains("timeout", StringComparison.OrdinalIgnoreCase)
             || message.Contains("temporarily", StringComparison.OrdinalIgnoreCase);
     }
+
+    private sealed record ModelCallResult(string? Content, ModelTokenUsage TokenUsage);
 }

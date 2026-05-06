@@ -24,7 +24,7 @@ public sealed class SemanticKernelDocumentClassificationService : IDocumentClass
         _settings = options.Value;
     }
 
-    public async Task<ClassificationResult> ClassifyAsync(
+    public async Task<ClassificationServiceResult> ClassifyAsync(
         ReadOnlyMemory<byte> imageBytes,
         string contentType,
         CancellationToken cancellationToken)
@@ -48,7 +48,9 @@ public sealed class SemanticKernelDocumentClassificationService : IDocumentClass
                     _kernel,
                     cancellationToken);
 
-                return ParseClassification(result.Content);
+                return new ClassificationServiceResult(
+                    ParseClassification(result.Content),
+                    ModelTokenUsageExtractor.FromContent("classification", _settings.ModelId, result));
             }
             catch (Exception ex) when (attempt < MaxModelCallAttempts && IsTransientModelFailure(ex))
             {

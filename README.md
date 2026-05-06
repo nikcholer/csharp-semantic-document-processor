@@ -84,6 +84,29 @@ curl.exe -F "image=@assets/sample-doc1.png;type=image/png" -F "sourceId=sample-d
 
 The current processing endpoint validates and reads the uploaded image, classifies it as `Invoice`, `Receipt`, or `Unknown`, then extracts typed invoice or receipt data. Policy evaluation starts in Milestone 6.
 
+Responses include `modelUsage` with token counts for each model call and per-document totals when the provider returns usage data:
+
+```json
+{
+  "modelUsage": {
+    "calls": [
+      {
+        "operation": "classification",
+        "modelId": "google/gemma-4-31B-it",
+        "inputTokens": 439,
+        "outputTokens": 150,
+        "totalTokens": 589
+      }
+    ],
+    "totalInputTokens": 439,
+    "totalOutputTokens": 150,
+    "totalTokens": 589
+  }
+}
+```
+
+The API also emits structured log events named `ModelTokenUsage` and `DocumentModelUsage` with `FileName`, `SourceId`, `ModelId`, and token fields for downstream cost analysis.
+
 The included sample assets currently process as:
 
 - `assets/sample-doc1.png`: `Invoice`, vendor `Workspace Interiors Ltd`, total `967.20 GBP`

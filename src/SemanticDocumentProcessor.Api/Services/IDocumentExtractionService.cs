@@ -4,12 +4,12 @@ namespace SemanticDocumentProcessor.Api.Services;
 
 public interface IDocumentExtractionService
 {
-    Task<InvoiceData> ExtractInvoiceAsync(
+    Task<ExtractionServiceResult<InvoiceData>> ExtractInvoiceAsync(
         ReadOnlyMemory<byte> imageBytes,
         string contentType,
         CancellationToken cancellationToken);
 
-    Task<ReceiptData> ExtractReceiptAsync(
+    Task<ExtractionServiceResult<ReceiptData>> ExtractReceiptAsync(
         ReadOnlyMemory<byte> imageBytes,
         string contentType,
         CancellationToken cancellationToken);

@@ -74,10 +74,10 @@ public static class DocumentProcessingEndpoints
             metadata.ContentType,
             metadata.FileSizeBytes);
 
-        ClassificationResult classification;
+        ClassificationServiceResult classificationResult;
         try
         {
-            classification = await classificationService.ClassifyAsync(
+            classificationResult = await classificationService.ClassifyAsync(
                 imageBytes,
                 image.ContentType,
                 cancellationToken);
@@ -95,6 +95,7 @@ public static class DocumentProcessingEndpoints
                 statusCode: StatusCodes.Status502BadGateway);
         }
 
+        var classification = classificationResult.Classification;
         var classifiedMetadata = metadata with
         {
             ClassificationConfidence = classification.Confidence
@@ -105,27 +106,40 @@ public static class DocumentProcessingEndpoints
             classifiedMetadata.FileName,
             classification.Category);
 
+        LogTokenUsage(logger, classifiedMetadata.FileName, sourceId, classificationResult.TokenUsage);
+
         ProcessedDocument document;
+        ModelTokenUsage? extractionTokenUsage = null;
         try
         {
-            document = classification.Category switch
+            switch (classification.Category)
             {
-                DocumentCategory.Invoice => new InvoiceDocument(
-                    classifiedMetadata,
-                    await extractionService.ExtractInvoiceAsync(
+                case DocumentCategory.Invoice:
+                    var invoiceExtraction = await extractionService.ExtractInvoiceAsync(
                         imageBytes,
                         image.ContentType,
-                        cancellationToken),
-                    PolicyResult: null),
-                DocumentCategory.Receipt => new ReceiptDocument(
-                    classifiedMetadata,
-                    await extractionService.ExtractReceiptAsync(
+                        cancellationToken);
+                    extractionTokenUsage = invoiceExtraction.TokenUsage;
+                    document = new InvoiceDocument(
+                        classifiedMetadata,
+                        invoiceExtraction.Data,
+                        PolicyResult: null);
+                    break;
+                case DocumentCategory.Receipt:
+                    var receiptExtraction = await extractionService.ExtractReceiptAsync(
                         imageBytes,
                         image.ContentType,
-                        cancellationToken),
-                    PolicyResult: null),
-                _ => new UnknownDocument(classifiedMetadata, classification.ConfidenceReasoning)
-            };
+                        cancellationToken);
+                    extractionTokenUsage = receiptExtraction.TokenUsage;
+                    document = new ReceiptDocument(
+                        classifiedMetadata,
+                        receiptExtraction.Data,
+                        PolicyResult: null);
+                    break;
+                default:
+                    document = new UnknownDocument(classifiedMetadata, classification.ConfidenceReasoning);
+                    break;
+            }
         }
         catch (DocumentExtractionException ex)
         {
@@ -141,6 +155,25 @@ public static class DocumentProcessingEndpoints
                 statusCode: StatusCodes.Status502BadGateway);
         }
 
+        if (extractionTokenUsage is not null)
+        {
+            LogTokenUsage(logger, classifiedMetadata.FileName, sourceId, extractionTokenUsage);
+        }
+
+        var modelUsage = DocumentModelUsage.FromCalls(
+            extractionTokenUsage is null
+                ? [classificationResult.TokenUsage]
+                : [classificationResult.TokenUsage, extractionTokenUsage]);
+
+        logger.LogInformation(
+            "DocumentModelUsage FileName={FileName} SourceId={SourceId} ModelId={ModelId} TotalInputTokens={TotalInputTokens} TotalOutputTokens={TotalOutputTokens} TotalTokens={TotalTokens}",
+            classifiedMetadata.FileName,
+            sourceId,
+            aiOptions.Value.ModelId,
+            modelUsage.TotalInputTokens,
+            modelUsage.TotalOutputTokens,
+            modelUsage.TotalTokens);
+
         var warnings = classification.Category == DocumentCategory.Unknown
             ? Array.Empty<string>()
             : ["Policy evaluation is not implemented yet."];
@@ -149,6 +182,7 @@ public static class DocumentProcessingEndpoints
             Category: classification.Category,
             Metadata: classifiedMetadata,
             Classification: classification,
+            ModelUsage: modelUsage,
             Document: document,
             IsSuccess: true,
             Errors: [],
@@ -187,6 +221,23 @@ public static class DocumentProcessingEndpoints
     private static string? NormalizeOptionalValue(string? value)
     {
         return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+    }
+
+    private static void LogTokenUsage(
+        ILogger logger,
+        string fileName,
+        string? sourceId,
+        ModelTokenUsage usage)
+    {
+        logger.LogInformation(
+            "ModelTokenUsage Operation={Operation} FileName={FileName} SourceId={SourceId} ModelId={ModelId} InputTokens={InputTokens} OutputTokens={OutputTokens} TotalTokens={TotalTokens}",
+            usage.Operation,
+            fileName,
+            sourceId,
+            usage.ModelId,
+            usage.InputTokens,
+            usage.OutputTokens,
+            usage.TotalTokens);
     }
 }
 
