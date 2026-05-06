@@ -25,8 +25,9 @@ Milestone 1 scaffold is in place:
 - `/health` endpoint
 - initial domain model for invoices, receipts, shared document metadata, and policy decisions
 - image intake endpoint with multipart validation and file metadata response
+- live image classification through Semantic Kernel and Together AI
 
-Document classification and extraction are not implemented yet.
+Document extraction is not implemented yet.
 
 ## Configuration
 
@@ -80,4 +81,9 @@ Process an image:
 curl.exe -F "image=@assets/sample-doc1.png;type=image/png" -F "sourceId=sample-doc1" http://localhost:5275/api/documents/process
 ```
 
-The current processing endpoint validates and reads the uploaded image, then returns document metadata with an `Unknown` category. Model-based classification starts in Milestone 4.
+The current processing endpoint validates and reads the uploaded image, classifies it as `Invoice`, `Receipt`, or `Unknown`, then returns document metadata and classification reasoning. Extraction starts in Milestone 5.
+
+The included sample assets currently classify as:
+
+- `assets/sample-doc1.png`: `Invoice`
+- `assets/sample-doc2.png`: `Receipt`

@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Options;
 using SemanticDocumentProcessor.Api.Configuration;
 using SemanticDocumentProcessor.Api.Domain;
+using SemanticDocumentProcessor.Api.Services;
 
 namespace SemanticDocumentProcessor.Api.Endpoints;
 
@@ -18,6 +19,7 @@ public static class DocumentProcessingEndpoints
         HttpRequest request,
         IOptions<DocumentIntakeSettings> intakeOptions,
         IOptions<AiSettings> aiOptions,
+        IDocumentClassificationService classificationService,
         ILoggerFactory loggerFactory,
         CancellationToken cancellationToken)
     {
@@ -70,17 +72,53 @@ public static class DocumentProcessingEndpoints
             metadata.ContentType,
             metadata.FileSizeBytes);
 
-        var document = new UnknownDocument(
-            metadata,
-            Reason: "Image intake succeeded. Classification will be added in Milestone 4.");
+        ClassificationResult classification;
+        try
+        {
+            classification = await classificationService.ClassifyAsync(
+                imageBuffer.ToArray(),
+                image.ContentType,
+                cancellationToken);
+        }
+        catch (DocumentClassificationException ex)
+        {
+            logger.LogWarning(
+                ex,
+                "Classification failed for uploaded image {FileName}.",
+                metadata.FileName);
+
+            return Results.Problem(
+                title: "Document classification failed.",
+                detail: ex.Message,
+                statusCode: StatusCodes.Status502BadGateway);
+        }
+
+        var classifiedMetadata = metadata with
+        {
+            ClassificationConfidence = classification.Confidence
+        };
+
+        logger.LogInformation(
+            "Classified document image {FileName} as {Category}.",
+            classifiedMetadata.FileName,
+            classification.Category);
+
+        var document = classification.Category == DocumentCategory.Unknown
+            ? new UnknownDocument(classifiedMetadata, classification.ConfidenceReasoning)
+            : null;
+
+        var warnings = classification.Category == DocumentCategory.Unknown
+            ? Array.Empty<string>()
+            : ["Extraction is not implemented yet."];
 
         return Results.Ok(new DocumentProcessingResponse(
-            Category: DocumentCategory.Unknown,
-            Metadata: metadata,
+            Category: classification.Category,
+            Metadata: classifiedMetadata,
+            Classification: classification,
             Document: document,
             IsSuccess: true,
             Errors: [],
-            Warnings: ["Classification is not implemented yet."]));
+            Warnings: warnings));
     }
 
     private static DocumentIntakeErrorResponse? ValidateImage(

@@ -51,12 +51,12 @@
 - [x] Return `400 Bad Request` for invalid or unsupported input.
 
 ## Milestone 4: Classification
-- [ ] Implement `DocumentClassificationService`.
-- [ ] Prompt model to classify as invoice, receipt, or unknown.
-- [ ] Require strict JSON output.
-- [ ] Deserialize and validate classification result.
-- [ ] Handle invalid JSON with a controlled failure or retry.
-- [ ] Add confidence/reasoning field suitable for demo output without exposing hidden chain-of-thought.
+- [x] Implement `DocumentClassificationService`.
+- [x] Prompt model to classify as invoice, receipt, or unknown.
+- [x] Require strict JSON output.
+- [x] Deserialize and validate classification result.
+- [x] Handle invalid JSON with a controlled failure or retry.
+- [x] Add confidence/reasoning field suitable for demo output without exposing hidden chain-of-thought.
 
 ## Milestone 5: Extraction
 - [ ] Implement invoice extraction prompt/function.

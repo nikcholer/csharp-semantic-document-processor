@@ -4,6 +4,7 @@ using Microsoft.SemanticKernel;
 using SemanticDocumentProcessor.Api.Configuration;
 using SemanticDocumentProcessor.Api.Endpoints;
 using SemanticDocumentProcessor.Api.Security;
+using SemanticDocumentProcessor.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 var documentIntakeConfiguration = builder.Configuration.GetSection(DocumentIntakeSettings.SectionName);
@@ -69,6 +70,7 @@ builder.Services.AddSingleton(sp =>
 
     return kernelBuilder.Build();
 });
+builder.Services.AddScoped<IDocumentClassificationService, SemanticKernelDocumentClassificationService>();
 
 var app = builder.Build();
 
