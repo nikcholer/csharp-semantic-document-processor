@@ -94,6 +94,7 @@ builder.Services.AddScoped<IDocumentClassificationService, SemanticKernelDocumen
 builder.Services.AddScoped<IDocumentExtractionService, SemanticKernelDocumentExtractionService>();
 builder.Services.AddScoped<IPolicyEvaluationService, SemanticKernelPolicyEvaluationService>();
 builder.Services.AddScoped<IDocumentProcessingOrchestrator, DocumentProcessingOrchestrator>();
+builder.Services.AddSingleton<DocumentImageValidator>();
 builder.Services.AddSingleton<IVendorPolicyRepository, InMemoryVendorPolicyRepository>();
 builder.Services.AddScoped<VendorPolicyPlugin>();
 builder.Services.AddScoped<ApprovalPolicyPlugin>();

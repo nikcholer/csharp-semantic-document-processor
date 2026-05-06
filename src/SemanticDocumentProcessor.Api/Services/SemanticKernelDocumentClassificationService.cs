@@ -109,7 +109,7 @@ Use "Unknown" when the image is unreadable or not clearly an invoice or receipt.
         return history;
     }
 
-    private static ClassificationResult ParseClassification(string? content)
+    internal static ClassificationResult ParseClassification(string? content)
     {
         if (string.IsNullOrWhiteSpace(content))
         {

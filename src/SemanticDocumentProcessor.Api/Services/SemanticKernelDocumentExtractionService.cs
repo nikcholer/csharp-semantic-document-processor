@@ -174,7 +174,7 @@ Rules:
 """;
     }
 
-    private static InvoiceData ParseInvoice(string? content)
+    internal static InvoiceData ParseInvoice(string? content)
     {
         using var document = ParseJson(content, "invoice");
         var root = document.RootElement;
@@ -188,7 +188,7 @@ Rules:
             CurrencyCode: NormalizeCurrencyCode(GetOptionalString(root, "currencyCode")));
     }
 
-    private static ReceiptData ParseReceipt(string? content)
+    internal static ReceiptData ParseReceipt(string? content)
     {
         using var document = ParseJson(content, "receipt");
         var root = document.RootElement;

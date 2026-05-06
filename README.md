@@ -124,3 +124,13 @@ dotnet run --project .\spikes\PolicyPluginVerifier\PolicyPluginVerifier.csproj -
 ```
 
 The verifier invokes the Semantic Kernel native policy plugins directly with the current sample extraction values.
+
+## Tests
+
+Run the unit test suite:
+
+```powershell
+dotnet test .\tests\SemanticDocumentProcessor.Tests\SemanticDocumentProcessor.Tests.csproj --no-restore
+```
+
+The tests cover deterministic vendor matching, approval policy boundaries, upload image validation, model JSON parsing failure paths, and orchestrator routing using fake classifier/extractor/policy services. The test project is run by project path so the existing solution build remains focused on the API project.

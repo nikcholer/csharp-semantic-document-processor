@@ -93,11 +93,11 @@
 - [x] Return early for `Unknown`.
 
 ## Milestone 8: Tests
-- [ ] Unit test vendor matching.
-- [ ] Unit test approval policy boundaries.
-- [ ] Unit test request validation.
-- [ ] Unit test JSON parsing failure paths.
-- [ ] Add orchestrator tests with mocked classifier/extractor/plugin behavior.
+- [x] Unit test vendor matching.
+- [x] Unit test approval policy boundaries.
+- [x] Unit test request validation.
+- [x] Unit test JSON parsing failure paths.
+- [x] Add orchestrator tests with mocked classifier/extractor/plugin behavior.
 - [ ] Add sample image smoke tests if stable fixtures are available.
 
 ## Milestone 9: Demo Assets and Documentation

@@ -19,6 +19,7 @@ public static class DocumentProcessingEndpoints
         HttpRequest request,
         IOptions<DocumentIntakeSettings> intakeOptions,
         IOptions<AiSettings> aiOptions,
+        DocumentImageValidator imageValidator,
         IDocumentProcessingOrchestrator orchestrator,
         ILoggerFactory loggerFactory,
         CancellationToken cancellationToken)
@@ -43,7 +44,12 @@ public static class DocumentProcessingEndpoints
                 Message: $"An uploaded image file is required in the '{settings.ImageFormFieldName}' form field."));
         }
 
-        var validationError = ValidateImage(image, settings);
+        var validationError = imageValidator.Validate(
+            new DocumentImageValidationRequest(
+                image.FileName,
+                image.ContentType,
+                image.Length),
+            settings);
         if (validationError is not null)
         {
             return Results.BadRequest(validationError);
@@ -120,35 +126,6 @@ public static class DocumentProcessingEndpoints
                 detail: ex.Message,
                 statusCode: StatusCodes.Status500InternalServerError);
         }
-    }
-
-    private static DocumentIntakeErrorResponse? ValidateImage(
-        IFormFile image,
-        DocumentIntakeSettings settings)
-    {
-        if (image.Length > settings.MaxUploadBytes)
-        {
-            return new DocumentIntakeErrorResponse(
-                Field: settings.ImageFormFieldName,
-                Message: $"Image file must be {settings.MaxUploadBytes} bytes or smaller.");
-        }
-
-        if (!settings.AllowedContentTypes.Contains(image.ContentType, StringComparer.OrdinalIgnoreCase))
-        {
-            return new DocumentIntakeErrorResponse(
-                Field: settings.ImageFormFieldName,
-                Message: $"Unsupported content type '{image.ContentType}'.");
-        }
-
-        var extension = Path.GetExtension(image.FileName);
-        if (!settings.AllowedExtensions.Contains(extension, StringComparer.OrdinalIgnoreCase))
-        {
-            return new DocumentIntakeErrorResponse(
-                Field: settings.ImageFormFieldName,
-                Message: $"Unsupported file extension '{extension}'.");
-        }
-
-        return null;
     }
 
     private static string? NormalizeOptionalValue(string? value)
