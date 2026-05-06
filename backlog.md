@@ -80,17 +80,17 @@
 - [x] Keep policy decisions deterministic in C# rather than relying on the model.
 
 ## Milestone 7: Orchestration
-- [ ] Implement `DocumentProcessingOrchestrator`.
-- [ ] Route by classification result.
-- [ ] Invoke the correct extraction path.
-- [ ] Invoke relevant SK native plugins for policy checks.
-- [ ] Return a single processing response containing:
-  - [ ] category
-  - [ ] extracted typed data
-  - [ ] policy result
-  - [ ] success flag
-  - [ ] errors or warnings
-- [ ] Return early for `Unknown`.
+- [x] Implement `DocumentProcessingOrchestrator`.
+- [x] Route by classification result.
+- [x] Invoke the correct extraction path.
+- [x] Invoke relevant SK native plugins for policy checks.
+- [x] Return a single processing response containing:
+  - [x] category
+  - [x] extracted typed data
+  - [x] policy result
+  - [x] success flag
+  - [x] errors or warnings
+- [x] Return early for `Unknown`.
 
 ## Milestone 8: Tests
 - [ ] Unit test vendor matching.

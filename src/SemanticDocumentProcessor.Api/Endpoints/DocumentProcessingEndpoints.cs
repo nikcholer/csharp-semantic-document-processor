@@ -19,9 +19,7 @@ public static class DocumentProcessingEndpoints
         HttpRequest request,
         IOptions<DocumentIntakeSettings> intakeOptions,
         IOptions<AiSettings> aiOptions,
-        IDocumentClassificationService classificationService,
-        IDocumentExtractionService extractionService,
-        IPolicyEvaluationService policyEvaluationService,
+        IDocumentProcessingOrchestrator orchestrator,
         ILoggerFactory loggerFactory,
         CancellationToken cancellationToken)
     {
@@ -75,13 +73,16 @@ public static class DocumentProcessingEndpoints
             metadata.ContentType,
             metadata.FileSizeBytes);
 
-        ClassificationServiceResult classificationResult;
         try
         {
-            classificationResult = await classificationService.ClassifyAsync(
-                imageBytes,
-                image.ContentType,
+            var response = await orchestrator.ProcessAsync(
+                new DocumentProcessingRequest(
+                    imageBytes,
+                    image.ContentType,
+                    metadata),
                 cancellationToken);
+
+            return Results.Ok(response);
         }
         catch (DocumentClassificationException ex)
         {
@@ -95,66 +96,12 @@ public static class DocumentProcessingEndpoints
                 detail: ex.Message,
                 statusCode: StatusCodes.Status502BadGateway);
         }
-
-        var classification = classificationResult.Classification;
-        var classifiedMetadata = metadata with
-        {
-            ClassificationConfidence = classification.Confidence
-        };
-
-        logger.LogInformation(
-            "Classified document image {FileName} as {Category}.",
-            classifiedMetadata.FileName,
-            classification.Category);
-
-        LogTokenUsage(logger, classifiedMetadata.FileName, sourceId, classificationResult.TokenUsage);
-
-        ProcessedDocument document;
-        ModelTokenUsage? extractionTokenUsage = null;
-        try
-        {
-            switch (classification.Category)
-            {
-                case DocumentCategory.Invoice:
-                    var invoiceExtraction = await extractionService.ExtractInvoiceAsync(
-                        imageBytes,
-                        image.ContentType,
-                        cancellationToken);
-                    extractionTokenUsage = invoiceExtraction.TokenUsage;
-                    var invoicePolicy = await policyEvaluationService.EvaluateInvoiceAsync(
-                        invoiceExtraction.Data,
-                        cancellationToken);
-                    document = new InvoiceDocument(
-                        classifiedMetadata,
-                        invoiceExtraction.Data,
-                        invoicePolicy);
-                    break;
-                case DocumentCategory.Receipt:
-                    var receiptExtraction = await extractionService.ExtractReceiptAsync(
-                        imageBytes,
-                        image.ContentType,
-                        cancellationToken);
-                    extractionTokenUsage = receiptExtraction.TokenUsage;
-                    var receiptPolicy = await policyEvaluationService.EvaluateReceiptAsync(
-                        receiptExtraction.Data,
-                        cancellationToken);
-                    document = new ReceiptDocument(
-                        classifiedMetadata,
-                        receiptExtraction.Data,
-                        receiptPolicy);
-                    break;
-                default:
-                    document = new UnknownDocument(classifiedMetadata, classification.ConfidenceReasoning);
-                    break;
-            }
-        }
         catch (DocumentExtractionException ex)
         {
             logger.LogWarning(
                 ex,
-                "Extraction failed for uploaded image {FileName} classified as {Category}.",
-                classifiedMetadata.FileName,
-                classification.Category);
+                "Extraction failed for uploaded image {FileName}.",
+                metadata.FileName);
 
             return Results.Problem(
                 title: "Document extraction failed.",
@@ -165,46 +112,14 @@ public static class DocumentProcessingEndpoints
         {
             logger.LogWarning(
                 ex,
-                "Policy evaluation failed for uploaded image {FileName} classified as {Category}.",
-                classifiedMetadata.FileName,
-                classification.Category);
+                "Policy evaluation failed for uploaded image {FileName}.",
+                metadata.FileName);
 
             return Results.Problem(
                 title: "Document policy evaluation failed.",
                 detail: ex.Message,
                 statusCode: StatusCodes.Status500InternalServerError);
         }
-
-        if (extractionTokenUsage is not null)
-        {
-            LogTokenUsage(logger, classifiedMetadata.FileName, sourceId, extractionTokenUsage);
-        }
-
-        var modelUsage = DocumentModelUsage.FromCalls(
-            extractionTokenUsage is null
-                ? [classificationResult.TokenUsage]
-                : [classificationResult.TokenUsage, extractionTokenUsage]);
-
-        logger.LogInformation(
-            "DocumentModelUsage FileName={FileName} SourceId={SourceId} ModelId={ModelId} TotalInputTokens={TotalInputTokens} TotalOutputTokens={TotalOutputTokens} TotalTokens={TotalTokens}",
-            classifiedMetadata.FileName,
-            sourceId,
-            aiOptions.Value.ModelId,
-            modelUsage.TotalInputTokens,
-            modelUsage.TotalOutputTokens,
-            modelUsage.TotalTokens);
-
-        var warnings = Array.Empty<string>();
-
-        return Results.Ok(new DocumentProcessingResponse(
-            Category: classification.Category,
-            Metadata: classifiedMetadata,
-            Classification: classification,
-            ModelUsage: modelUsage,
-            Document: document,
-            IsSuccess: true,
-            Errors: [],
-            Warnings: warnings));
     }
 
     private static DocumentIntakeErrorResponse? ValidateImage(
@@ -239,23 +154,6 @@ public static class DocumentProcessingEndpoints
     private static string? NormalizeOptionalValue(string? value)
     {
         return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
-    }
-
-    private static void LogTokenUsage(
-        ILogger logger,
-        string fileName,
-        string? sourceId,
-        ModelTokenUsage usage)
-    {
-        logger.LogInformation(
-            "ModelTokenUsage Operation={Operation} FileName={FileName} SourceId={SourceId} ModelId={ModelId} InputTokens={InputTokens} OutputTokens={OutputTokens} TotalTokens={TotalTokens}",
-            usage.Operation,
-            fileName,
-            sourceId,
-            usage.ModelId,
-            usage.InputTokens,
-            usage.OutputTokens,
-            usage.TotalTokens);
     }
 
 }

@@ -93,6 +93,7 @@ builder.Services.AddScoped(sp =>
 builder.Services.AddScoped<IDocumentClassificationService, SemanticKernelDocumentClassificationService>();
 builder.Services.AddScoped<IDocumentExtractionService, SemanticKernelDocumentExtractionService>();
 builder.Services.AddScoped<IPolicyEvaluationService, SemanticKernelPolicyEvaluationService>();
+builder.Services.AddScoped<IDocumentProcessingOrchestrator, DocumentProcessingOrchestrator>();
 builder.Services.AddSingleton<IVendorPolicyRepository, InMemoryVendorPolicyRepository>();
 builder.Services.AddScoped<VendorPolicyPlugin>();
 builder.Services.AddScoped<ApprovalPolicyPlugin>();
