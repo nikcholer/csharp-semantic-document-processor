@@ -21,6 +21,7 @@ public static class DocumentProcessingEndpoints
         IOptions<AiSettings> aiOptions,
         IDocumentClassificationService classificationService,
         IDocumentExtractionService extractionService,
+        IPolicyEvaluationService policyEvaluationService,
         ILoggerFactory loggerFactory,
         CancellationToken cancellationToken)
     {
@@ -120,10 +121,13 @@ public static class DocumentProcessingEndpoints
                         image.ContentType,
                         cancellationToken);
                     extractionTokenUsage = invoiceExtraction.TokenUsage;
+                    var invoicePolicy = await policyEvaluationService.EvaluateInvoiceAsync(
+                        invoiceExtraction.Data,
+                        cancellationToken);
                     document = new InvoiceDocument(
                         classifiedMetadata,
                         invoiceExtraction.Data,
-                        PolicyResult: null);
+                        invoicePolicy);
                     break;
                 case DocumentCategory.Receipt:
                     var receiptExtraction = await extractionService.ExtractReceiptAsync(
@@ -131,10 +135,13 @@ public static class DocumentProcessingEndpoints
                         image.ContentType,
                         cancellationToken);
                     extractionTokenUsage = receiptExtraction.TokenUsage;
+                    var receiptPolicy = await policyEvaluationService.EvaluateReceiptAsync(
+                        receiptExtraction.Data,
+                        cancellationToken);
                     document = new ReceiptDocument(
                         classifiedMetadata,
                         receiptExtraction.Data,
-                        PolicyResult: null);
+                        receiptPolicy);
                     break;
                 default:
                     document = new UnknownDocument(classifiedMetadata, classification.ConfidenceReasoning);
@@ -153,6 +160,19 @@ public static class DocumentProcessingEndpoints
                 title: "Document extraction failed.",
                 detail: ex.Message,
                 statusCode: StatusCodes.Status502BadGateway);
+        }
+        catch (DocumentPolicyException ex)
+        {
+            logger.LogWarning(
+                ex,
+                "Policy evaluation failed for uploaded image {FileName} classified as {Category}.",
+                classifiedMetadata.FileName,
+                classification.Category);
+
+            return Results.Problem(
+                title: "Document policy evaluation failed.",
+                detail: ex.Message,
+                statusCode: StatusCodes.Status500InternalServerError);
         }
 
         if (extractionTokenUsage is not null)
@@ -174,9 +194,7 @@ public static class DocumentProcessingEndpoints
             modelUsage.TotalOutputTokens,
             modelUsage.TotalTokens);
 
-        var warnings = classification.Category == DocumentCategory.Unknown
-            ? Array.Empty<string>()
-            : ["Policy evaluation is not implemented yet."];
+        var warnings = Array.Empty<string>();
 
         return Results.Ok(new DocumentProcessingResponse(
             Category: classification.Category,
@@ -239,6 +257,7 @@ public static class DocumentProcessingEndpoints
             usage.OutputTokens,
             usage.TotalTokens);
     }
+
 }
 
 public sealed record DocumentIntakeErrorResponse(string Field, string Message);

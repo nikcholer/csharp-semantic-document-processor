@@ -69,15 +69,15 @@
 - [x] Return extraction errors with actionable messages.
 
 ## Milestone 6: Semantic Kernel Business Plugins
-- [ ] Add `VendorPolicyPlugin`.
-- [ ] Implement vendor alias matching against stored vendor policies.
-- [ ] Add seed vendor policy data for demo use.
-- [ ] Add `ApprovalPolicyPlugin`.
-- [ ] Evaluate invoice total against vendor max approved value.
-- [ ] Flag inactive or unmatched vendors.
-- [ ] Add receipt policy checks for high-value or missing payment method.
-- [ ] Ensure plugin function names and parameter descriptions are clear for SK/function-calling.
-- [ ] Keep policy decisions deterministic in C# rather than relying on the model.
+- [x] Add `VendorPolicyPlugin`.
+- [x] Implement vendor alias matching against stored vendor policies.
+- [x] Add seed vendor policy data for demo use.
+- [x] Add `ApprovalPolicyPlugin`.
+- [x] Evaluate invoice total against vendor max approved value.
+- [x] Flag inactive or unmatched vendors.
+- [x] Add receipt policy checks for high-value or missing payment method.
+- [x] Ensure plugin function names and parameter descriptions are clear for SK/function-calling.
+- [x] Keep policy decisions deterministic in C# rather than relying on the model.
 
 ## Milestone 7: Orchestration
 - [ ] Implement `DocumentProcessingOrchestrator`.

@@ -27,8 +27,9 @@ Milestone 1 scaffold is in place:
 - image intake endpoint with multipart validation and file metadata response
 - live image classification through Semantic Kernel and Together AI
 - typed invoice and receipt extraction through Semantic Kernel and Together AI
+- deterministic Semantic Kernel native plugins for vendor matching and policy evaluation
 
-Policy evaluation is not implemented yet.
+Policy evaluation is implemented for the v1 invoice and receipt samples.
 
 ## Configuration
 
@@ -82,7 +83,7 @@ Process an image:
 curl.exe -F "image=@assets/sample-doc1.png;type=image/png" -F "sourceId=sample-doc1" http://localhost:5275/api/documents/process
 ```
 
-The current processing endpoint validates and reads the uploaded image, classifies it as `Invoice`, `Receipt`, or `Unknown`, then extracts typed invoice or receipt data. Policy evaluation starts in Milestone 6.
+The current processing endpoint validates and reads the uploaded image, classifies it as `Invoice`, `Receipt`, extracts typed invoice or receipt data, then evaluates deterministic C# business policy through Semantic Kernel native plugins.
 
 Responses include `modelUsage` with token counts for each model call and per-document totals when the provider returns usage data:
 
@@ -111,3 +112,13 @@ The included sample assets currently process as:
 
 - `assets/sample-doc1.png`: `Invoice`, vendor `Workspace Interiors Ltd`, total `967.20 GBP`
 - `assets/sample-doc2.png`: `Receipt`, store `Meadow Vale Supermarket`, total `21.02 GBP`
+
+Both current samples evaluate to `Approved` under the seeded policies. Invoice policy checks vendor alias matching, active vendor status, currency, and max auto-approved value. Receipt policy checks the review threshold and visible payment method.
+
+Policy verification without live model calls:
+
+```powershell
+dotnet run --project .\spikes\PolicyPluginVerifier\PolicyPluginVerifier.csproj --no-restore
+```
+
+The verifier invokes the Semantic Kernel native policy plugins directly with the current sample extraction values.

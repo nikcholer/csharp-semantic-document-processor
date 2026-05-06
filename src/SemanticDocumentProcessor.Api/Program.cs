@@ -3,6 +3,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.SemanticKernel;
 using SemanticDocumentProcessor.Api.Configuration;
 using SemanticDocumentProcessor.Api.Endpoints;
+using SemanticDocumentProcessor.Api.Plugins;
 using SemanticDocumentProcessor.Api.Security;
 using SemanticDocumentProcessor.Api.Services;
 
@@ -53,13 +54,24 @@ builder.Services
         "DocumentIntake:AllowedExtensions must contain at least one value.")
     .ValidateOnStart();
 
+builder.Services
+    .AddOptions<PolicySettings>()
+    .Bind(builder.Configuration.GetSection(PolicySettings.SectionName))
+    .Validate(
+        settings => settings.ReceiptReviewThreshold > 0,
+        "Policy:ReceiptReviewThreshold must be greater than zero.")
+    .Validate(
+        settings => !string.IsNullOrWhiteSpace(settings.DefaultCurrencyCode),
+        "Policy:DefaultCurrencyCode is required.")
+    .ValidateOnStart();
+
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
     options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
 });
 
 builder.Services.AddSingleton<IApiKeyProvider, EnvironmentApiKeyProvider>();
-builder.Services.AddSingleton(sp =>
+builder.Services.AddScoped(sp =>
 {
     var settings = sp.GetRequiredService<IOptions<AiSettings>>().Value;
     var apiKeyProvider = sp.GetRequiredService<IApiKeyProvider>();
@@ -80,6 +92,10 @@ builder.Services.AddSingleton(sp =>
 });
 builder.Services.AddScoped<IDocumentClassificationService, SemanticKernelDocumentClassificationService>();
 builder.Services.AddScoped<IDocumentExtractionService, SemanticKernelDocumentExtractionService>();
+builder.Services.AddScoped<IPolicyEvaluationService, SemanticKernelPolicyEvaluationService>();
+builder.Services.AddSingleton<IVendorPolicyRepository, InMemoryVendorPolicyRepository>();
+builder.Services.AddScoped<VendorPolicyPlugin>();
+builder.Services.AddScoped<ApprovalPolicyPlugin>();
 
 var app = builder.Build();
 
