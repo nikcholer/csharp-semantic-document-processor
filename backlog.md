@@ -42,13 +42,13 @@
 - [x] Decide date representation: `DateOnly` where suitable, `DateTime` only if time matters.
 
 ## Milestone 3: Image Intake API
-- [ ] Add `POST /api/documents/process`.
-- [ ] Accept `multipart/form-data` with an `image` file field.
-- [ ] Validate content type and extension for common image formats.
-- [ ] Add maximum upload size.
-- [ ] Read image safely into memory or temporary storage.
-- [ ] Avoid logging raw image content or extracted sensitive fields.
-- [ ] Return `400 Bad Request` for invalid or unsupported input.
+- [x] Add `POST /api/documents/process`.
+- [x] Accept `multipart/form-data` with an `image` file field.
+- [x] Validate content type and extension for common image formats.
+- [x] Add maximum upload size.
+- [x] Read image safely into memory or temporary storage.
+- [x] Avoid logging raw image content or extracted sensitive fields.
+- [x] Return `400 Bad Request` for invalid or unsupported input.
 
 ## Milestone 4: Classification
 - [ ] Implement `DocumentClassificationService`.

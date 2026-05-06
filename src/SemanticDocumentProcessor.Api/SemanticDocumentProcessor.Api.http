@@ -4,3 +4,19 @@ GET {{SemanticDocumentProcessor_Api_HostAddress}}/health
 Accept: application/json
 
 ###
+
+POST {{SemanticDocumentProcessor_Api_HostAddress}}/api/documents/process
+Content-Type: multipart/form-data; boundary=sample-boundary
+
+--sample-boundary
+Content-Disposition: form-data; name="sourceId"
+
+sample-doc1
+--sample-boundary
+Content-Disposition: form-data; name="image"; filename="sample-doc1.png"
+Content-Type: image/png
+
+< ../../assets/sample-doc1.png
+--sample-boundary--
+
+###

@@ -1,5 +1,11 @@
+using System.Text.Json.Serialization;
+
 namespace SemanticDocumentProcessor.Api.Domain;
 
+[JsonPolymorphic(TypeDiscriminatorPropertyName = "documentType")]
+[JsonDerivedType(typeof(InvoiceDocument), "invoice")]
+[JsonDerivedType(typeof(ReceiptDocument), "receipt")]
+[JsonDerivedType(typeof(UnknownDocument), "unknown")]
 public abstract record ProcessedDocument(
     DocumentCategory Category,
     DocumentMetadata Metadata);
