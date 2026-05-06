@@ -1,0 +1,6 @@
+@SemanticDocumentProcessor_Api_HostAddress = http://localhost:5275
+
+GET {{SemanticDocumentProcessor_Api_HostAddress}}/health
+Accept: application/json
+
+###

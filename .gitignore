@@ -4,4 +4,6 @@ obj/
 .idea/
 *.user
 *.suo
-
+*.env
+appsettings.Local.json
+appsettings.*.Local.json

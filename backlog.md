@@ -11,35 +11,35 @@
 - [x] Define demo positioning: Microsoft-centric .NET/SK architecture with provider-portable LLM integration.
 
 ## Milestone 1: Project Scaffold
-- [ ] Create .NET 8 Web API project.
-- [ ] Add Semantic Kernel package references.
-- [ ] Add configuration model:
-  - [ ] `AiSettings`
-  - [ ] provider name
-  - [ ] endpoint
-  - [ ] model id
-  - [ ] API key environment variable name
-- [ ] Configure options binding using `IOptions<AiSettings>`.
-- [ ] Add secure local secret guidance without checking secrets into source.
-- [ ] Set up dependency injection following the sibling project style where appropriate.
-- [ ] Add health endpoint.
+- [x] Create .NET 8 Web API project.
+- [x] Add Semantic Kernel package references.
+- [x] Add configuration model:
+  - [x] `AiSettings`
+  - [x] provider name
+  - [x] endpoint
+  - [x] model id
+  - [x] API key environment variable name
+- [x] Configure options binding using `IOptions<AiSettings>`.
+- [x] Add secure local secret guidance without checking secrets into source.
+- [x] Set up dependency injection following the sibling project style where appropriate.
+- [x] Add health endpoint.
 
 ## Milestone 2: Domain Model
-- [ ] Add document categories:
-  - [ ] `Invoice`
-  - [ ] `Receipt`
-  - [ ] `Unknown`
-- [ ] Add classification result model.
-- [ ] Add typed extraction records:
-  - [ ] `InvoiceData`
-  - [ ] `ReceiptData`
-- [ ] Add validation and policy result records:
-  - [ ] `VendorPolicy`
-  - [ ] `VendorMatchResult`
-  - [ ] `InvoicePolicyResult`
-  - [ ] `ReceiptPolicyResult`
-- [ ] Replace broad `object ExtractedData` with a response shape that keeps the API predictable.
-- [ ] Decide date representation: `DateOnly` where suitable, `DateTime` only if time matters.
+- [x] Add document categories:
+  - [x] `Invoice`
+  - [x] `Receipt`
+  - [x] `Unknown`
+- [x] Add classification result model.
+- [x] Add typed extraction records:
+  - [x] `InvoiceData`
+  - [x] `ReceiptData`
+- [x] Add validation and policy result records:
+  - [x] `VendorPolicy`
+  - [x] `VendorMatchResult`
+  - [x] `InvoicePolicyResult`
+  - [x] `ReceiptPolicyResult`
+- [x] Replace broad `object ExtractedData` with a response shape that keeps the API predictable.
+- [x] Decide date representation: `DateOnly` where suitable, `DateTime` only if time matters.
 
 ## Milestone 3: Image Intake API
 - [ ] Add `POST /api/documents/process`.
