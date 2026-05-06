@@ -59,14 +59,14 @@
 - [x] Add confidence/reasoning field suitable for demo output without exposing hidden chain-of-thought.
 
 ## Milestone 5: Extraction
-- [ ] Implement invoice extraction prompt/function.
-- [ ] Implement receipt extraction prompt/function.
-- [ ] Use structured output / JSON schema if supported by the chosen provider path.
-- [ ] Use JSON mode plus explicit schema prompt and validation as fallback.
-- [ ] Deserialize into typed records.
-- [ ] Validate required fields and numeric ranges.
-- [ ] Normalize currency/date fields.
-- [ ] Return extraction errors with actionable messages.
+- [x] Implement invoice extraction prompt/function.
+- [x] Implement receipt extraction prompt/function.
+- [x] Use structured output / JSON schema if supported by the chosen provider path.
+- [x] Use JSON mode plus explicit schema prompt and validation as fallback.
+- [x] Deserialize into typed records.
+- [x] Validate required fields and numeric ranges.
+- [x] Normalize currency/date fields.
+- [x] Return extraction errors with actionable messages.
 
 ## Milestone 6: Semantic Kernel Business Plugins
 - [ ] Add `VendorPolicyPlugin`.

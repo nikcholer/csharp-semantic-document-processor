@@ -31,6 +31,9 @@ builder.Services
     .Validate(
         settings => !string.IsNullOrWhiteSpace(settings.ApiKeyEnvironmentVariable),
         "Ai:ApiKeyEnvironmentVariable is required.")
+    .Validate(
+        settings => settings.RequestTimeoutSeconds > 0,
+        "Ai:RequestTimeoutSeconds must be greater than zero.")
     .ValidateOnStart();
 
 builder.Services
@@ -61,16 +64,22 @@ builder.Services.AddSingleton(sp =>
     var settings = sp.GetRequiredService<IOptions<AiSettings>>().Value;
     var apiKeyProvider = sp.GetRequiredService<IApiKeyProvider>();
     var kernelBuilder = Kernel.CreateBuilder();
+    var httpClient = new HttpClient
+    {
+        Timeout = TimeSpan.FromSeconds(settings.RequestTimeoutSeconds)
+    };
 
     kernelBuilder.AddOpenAIChatCompletion(
         modelId: settings.ModelId,
         endpoint: new Uri(settings.Endpoint),
         apiKey: apiKeyProvider.GetRequiredApiKey(settings.ApiKeyEnvironmentVariable),
-        serviceId: settings.ServiceId);
+        serviceId: settings.ServiceId,
+        httpClient: httpClient);
 
     return kernelBuilder.Build();
 });
 builder.Services.AddScoped<IDocumentClassificationService, SemanticKernelDocumentClassificationService>();
+builder.Services.AddScoped<IDocumentExtractionService, SemanticKernelDocumentExtractionService>();
 
 var app = builder.Build();
 

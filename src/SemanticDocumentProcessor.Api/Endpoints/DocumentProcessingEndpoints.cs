@@ -20,6 +20,7 @@ public static class DocumentProcessingEndpoints
         IOptions<DocumentIntakeSettings> intakeOptions,
         IOptions<AiSettings> aiOptions,
         IDocumentClassificationService classificationService,
+        IDocumentExtractionService extractionService,
         ILoggerFactory loggerFactory,
         CancellationToken cancellationToken)
     {
@@ -52,6 +53,7 @@ public static class DocumentProcessingEndpoints
         await using var imageStream = image.OpenReadStream();
         using var imageBuffer = new MemoryStream(capacity: checked((int)image.Length));
         await imageStream.CopyToAsync(imageBuffer, cancellationToken);
+        var imageBytes = imageBuffer.ToArray();
 
         var sourceId = form.TryGetValue("sourceId", out var sourceValues)
             ? NormalizeOptionalValue(sourceValues.ToString())
@@ -76,7 +78,7 @@ public static class DocumentProcessingEndpoints
         try
         {
             classification = await classificationService.ClassifyAsync(
-                imageBuffer.ToArray(),
+                imageBytes,
                 image.ContentType,
                 cancellationToken);
         }
@@ -103,13 +105,45 @@ public static class DocumentProcessingEndpoints
             classifiedMetadata.FileName,
             classification.Category);
 
-        var document = classification.Category == DocumentCategory.Unknown
-            ? new UnknownDocument(classifiedMetadata, classification.ConfidenceReasoning)
-            : null;
+        ProcessedDocument document;
+        try
+        {
+            document = classification.Category switch
+            {
+                DocumentCategory.Invoice => new InvoiceDocument(
+                    classifiedMetadata,
+                    await extractionService.ExtractInvoiceAsync(
+                        imageBytes,
+                        image.ContentType,
+                        cancellationToken),
+                    PolicyResult: null),
+                DocumentCategory.Receipt => new ReceiptDocument(
+                    classifiedMetadata,
+                    await extractionService.ExtractReceiptAsync(
+                        imageBytes,
+                        image.ContentType,
+                        cancellationToken),
+                    PolicyResult: null),
+                _ => new UnknownDocument(classifiedMetadata, classification.ConfidenceReasoning)
+            };
+        }
+        catch (DocumentExtractionException ex)
+        {
+            logger.LogWarning(
+                ex,
+                "Extraction failed for uploaded image {FileName} classified as {Category}.",
+                classifiedMetadata.FileName,
+                classification.Category);
+
+            return Results.Problem(
+                title: "Document extraction failed.",
+                detail: ex.Message,
+                statusCode: StatusCodes.Status502BadGateway);
+        }
 
         var warnings = classification.Category == DocumentCategory.Unknown
             ? Array.Empty<string>()
-            : ["Extraction is not implemented yet."];
+            : ["Policy evaluation is not implemented yet."];
 
         return Results.Ok(new DocumentProcessingResponse(
             Category: classification.Category,

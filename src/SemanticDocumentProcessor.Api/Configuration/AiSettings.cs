@@ -13,4 +13,6 @@ public sealed class AiSettings
     public string ApiKeyEnvironmentVariable { get; init; } = "TOGETHER_API_KEY";
 
     public string ServiceId { get; init; } = "together-vision";
+
+    public int RequestTimeoutSeconds { get; init; } = 180;
 }

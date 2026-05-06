@@ -11,7 +11,7 @@ namespace SemanticDocumentProcessor.Api.Services;
 
 public sealed class SemanticKernelDocumentClassificationService : IDocumentClassificationService
 {
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+    private const int MaxModelCallAttempts = 2;
 
     private readonly Kernel _kernel;
     private readonly AiSettings _settings;
@@ -38,13 +38,39 @@ public sealed class SemanticKernelDocumentClassificationService : IDocumentClass
             Temperature = 0
         };
 
-        var result = await chat.GetChatMessageContentAsync(
-            history,
-            executionSettings,
-            _kernel,
-            cancellationToken);
+        for (var attempt = 1; attempt <= MaxModelCallAttempts; attempt++)
+        {
+            try
+            {
+                var result = await chat.GetChatMessageContentAsync(
+                    history,
+                    executionSettings,
+                    _kernel,
+                    cancellationToken);
 
-        return ParseClassification(result.Content);
+                return ParseClassification(result.Content);
+            }
+            catch (Exception ex) when (attempt < MaxModelCallAttempts && IsTransientModelFailure(ex))
+            {
+                await Task.Delay(TimeSpan.FromSeconds(2), cancellationToken);
+            }
+            catch (DocumentClassificationException ex) when (attempt < MaxModelCallAttempts && IsTransientModelFailure(ex))
+            {
+                await Task.Delay(TimeSpan.FromSeconds(2), cancellationToken);
+            }
+            catch (DocumentClassificationException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                throw new DocumentClassificationException(
+                    "The classification model call failed.",
+                    ex);
+            }
+        }
+
+        throw new DocumentClassificationException("The classification model call failed.");
     }
 
     private static ChatHistory CreateChatHistory(
@@ -170,5 +196,16 @@ Use "Unknown" when the image is unreadable or not clearly an invoice or receipt.
     private static decimal? NormalizeConfidence(decimal? confidence)
     {
         return confidence is >= 0 and <= 1 ? confidence : null;
+    }
+
+    private static bool IsTransientModelFailure(Exception ex)
+    {
+        var message = ex.ToString();
+
+        return message.Contains("503", StringComparison.OrdinalIgnoreCase)
+            || message.Contains("service_unavailable", StringComparison.OrdinalIgnoreCase)
+            || message.Contains("empty response", StringComparison.OrdinalIgnoreCase)
+            || message.Contains("timeout", StringComparison.OrdinalIgnoreCase)
+            || message.Contains("temporarily", StringComparison.OrdinalIgnoreCase);
     }
 }

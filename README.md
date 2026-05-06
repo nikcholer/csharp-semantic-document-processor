@@ -26,8 +26,9 @@ Milestone 1 scaffold is in place:
 - initial domain model for invoices, receipts, shared document metadata, and policy decisions
 - image intake endpoint with multipart validation and file metadata response
 - live image classification through Semantic Kernel and Together AI
+- typed invoice and receipt extraction through Semantic Kernel and Together AI
 
-Document extraction is not implemented yet.
+Policy evaluation is not implemented yet.
 
 ## Configuration
 
@@ -81,9 +82,9 @@ Process an image:
 curl.exe -F "image=@assets/sample-doc1.png;type=image/png" -F "sourceId=sample-doc1" http://localhost:5275/api/documents/process
 ```
 
-The current processing endpoint validates and reads the uploaded image, classifies it as `Invoice`, `Receipt`, or `Unknown`, then returns document metadata and classification reasoning. Extraction starts in Milestone 5.
+The current processing endpoint validates and reads the uploaded image, classifies it as `Invoice`, `Receipt`, or `Unknown`, then extracts typed invoice or receipt data. Policy evaluation starts in Milestone 6.
 
-The included sample assets currently classify as:
+The included sample assets currently process as:
 
-- `assets/sample-doc1.png`: `Invoice`
-- `assets/sample-doc2.png`: `Receipt`
+- `assets/sample-doc1.png`: `Invoice`, vendor `Workspace Interiors Ltd`, total `967.20 GBP`
+- `assets/sample-doc2.png`: `Receipt`, store `Meadow Vale Supermarket`, total `21.02 GBP`
