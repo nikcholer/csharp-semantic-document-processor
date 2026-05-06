@@ -101,18 +101,18 @@
 - [ ] Add sample image smoke tests if stable fixtures are available.
 
 ## Milestone 9: Demo Assets and Documentation
-- [ ] Generate synthetic invoice sample image.
-- [ ] Generate synthetic receipt sample image.
-- [ ] Add README with:
-  - [ ] project goal
-  - [ ] architecture diagram
-  - [ ] configuration instructions
-  - [ ] sample requests
-  - [ ] provider portability notes
-  - [ ] Microsoft/Semantic Kernel vocabulary mapping
-- [ ] Document why PDF is out of scope for v1.
-- [ ] Document how PDF-to-image could be added later.
-- [ ] Add a short portfolio narrative explaining business value.
+- [x] Generate synthetic invoice sample image.
+- [x] Generate synthetic receipt sample image.
+- [x] Add README with:
+  - [x] project goal
+  - [x] architecture diagram
+  - [x] configuration instructions
+  - [x] sample requests
+  - [x] provider portability notes
+  - [x] Microsoft/Semantic Kernel vocabulary mapping
+- [x] Document why PDF is out of scope for v1.
+- [x] Document how PDF-to-image could be added later.
+- [x] Add a short portfolio narrative explaining business value.
 
 ## Milestone 10: Polish
 - [ ] Add consistent error response format.
