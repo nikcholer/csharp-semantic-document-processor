@@ -1,0 +1,148 @@
+# Backlog: C# Semantic Document Processor
+
+## Milestone 0: Framing and Feasibility
+- [x] Confirm v1 scope: image uploads only, invoices and receipts only.
+- [x] Confirm target provider path: Together AI via OpenAI-compatible API.
+- [x] Choose initial configurable vision model default, e.g. Gemma 4 or Gemma 3n if available.
+- [x] Spike Semantic Kernel image-message support against Together AI.
+- [x] Decide fallback path if SK connector cannot cleanly send image payloads:
+  - [x] Keep SK for orchestration and native plugins.
+  - [x] Add a small `TogetherVisionClient` behind an app-owned interface.
+- [x] Define demo positioning: Microsoft-centric .NET/SK architecture with provider-portable LLM integration.
+
+## Milestone 1: Project Scaffold
+- [ ] Create .NET 8 Web API project.
+- [ ] Add Semantic Kernel package references.
+- [ ] Add configuration model:
+  - [ ] `AiSettings`
+  - [ ] provider name
+  - [ ] endpoint
+  - [ ] model id
+  - [ ] API key environment variable name
+- [ ] Configure options binding using `IOptions<AiSettings>`.
+- [ ] Add secure local secret guidance without checking secrets into source.
+- [ ] Set up dependency injection following the sibling project style where appropriate.
+- [ ] Add health endpoint.
+
+## Milestone 2: Domain Model
+- [ ] Add document categories:
+  - [ ] `Invoice`
+  - [ ] `Receipt`
+  - [ ] `Unknown`
+- [ ] Add classification result model.
+- [ ] Add typed extraction records:
+  - [ ] `InvoiceData`
+  - [ ] `ReceiptData`
+- [ ] Add validation and policy result records:
+  - [ ] `VendorPolicy`
+  - [ ] `VendorMatchResult`
+  - [ ] `InvoicePolicyResult`
+  - [ ] `ReceiptPolicyResult`
+- [ ] Replace broad `object ExtractedData` with a response shape that keeps the API predictable.
+- [ ] Decide date representation: `DateOnly` where suitable, `DateTime` only if time matters.
+
+## Milestone 3: Image Intake API
+- [ ] Add `POST /api/documents/process`.
+- [ ] Accept `multipart/form-data` with an `image` file field.
+- [ ] Validate content type and extension for common image formats.
+- [ ] Add maximum upload size.
+- [ ] Read image safely into memory or temporary storage.
+- [ ] Avoid logging raw image content or extracted sensitive fields.
+- [ ] Return `400 Bad Request` for invalid or unsupported input.
+
+## Milestone 4: Classification
+- [ ] Implement `DocumentClassificationService`.
+- [ ] Prompt model to classify as invoice, receipt, or unknown.
+- [ ] Require strict JSON output.
+- [ ] Deserialize and validate classification result.
+- [ ] Handle invalid JSON with a controlled failure or retry.
+- [ ] Add confidence/reasoning field suitable for demo output without exposing hidden chain-of-thought.
+
+## Milestone 5: Extraction
+- [ ] Implement invoice extraction prompt/function.
+- [ ] Implement receipt extraction prompt/function.
+- [ ] Use structured output / JSON schema if supported by the chosen provider path.
+- [ ] Use JSON mode plus explicit schema prompt and validation as fallback.
+- [ ] Deserialize into typed records.
+- [ ] Validate required fields and numeric ranges.
+- [ ] Normalize currency/date fields.
+- [ ] Return extraction errors with actionable messages.
+
+## Milestone 6: Semantic Kernel Business Plugins
+- [ ] Add `VendorPolicyPlugin`.
+- [ ] Implement vendor alias matching against stored vendor policies.
+- [ ] Add seed vendor policy data for demo use.
+- [ ] Add `ApprovalPolicyPlugin`.
+- [ ] Evaluate invoice total against vendor max approved value.
+- [ ] Flag inactive or unmatched vendors.
+- [ ] Add receipt policy checks for high-value or missing payment method.
+- [ ] Ensure plugin function names and parameter descriptions are clear for SK/function-calling.
+- [ ] Keep policy decisions deterministic in C# rather than relying on the model.
+
+## Milestone 7: Orchestration
+- [ ] Implement `DocumentProcessingOrchestrator`.
+- [ ] Route by classification result.
+- [ ] Invoke the correct extraction path.
+- [ ] Invoke relevant SK native plugins for policy checks.
+- [ ] Return a single processing response containing:
+  - [ ] category
+  - [ ] extracted typed data
+  - [ ] policy result
+  - [ ] success flag
+  - [ ] errors or warnings
+- [ ] Return early for `Unknown`.
+
+## Milestone 8: Tests
+- [ ] Unit test vendor matching.
+- [ ] Unit test approval policy boundaries.
+- [ ] Unit test request validation.
+- [ ] Unit test JSON parsing failure paths.
+- [ ] Add orchestrator tests with mocked classifier/extractor/plugin behavior.
+- [ ] Add sample image smoke tests if stable fixtures are available.
+
+## Milestone 9: Demo Assets and Documentation
+- [ ] Generate synthetic invoice sample image.
+- [ ] Generate synthetic receipt sample image.
+- [ ] Add README with:
+  - [ ] project goal
+  - [ ] architecture diagram
+  - [ ] configuration instructions
+  - [ ] sample requests
+  - [ ] provider portability notes
+  - [ ] Microsoft/Semantic Kernel vocabulary mapping
+- [ ] Document why PDF is out of scope for v1.
+- [ ] Document how PDF-to-image could be added later.
+- [ ] Add a short portfolio narrative explaining business value.
+
+## Milestone 10: Polish
+- [ ] Add consistent error response format.
+- [ ] Add request correlation id in logs.
+- [ ] Add Swagger/OpenAPI metadata.
+- [ ] Add Dockerfile if it helps demo portability.
+- [ ] Add basic CI build/test workflow if repository hosting is planned.
+- [ ] Review code for secret leakage and noisy logs.
+
+## Icebox
+- [ ] PDF input adapter using PDF-to-image rasterization.
+- [ ] Azure AI Document Intelligence comparison implementation.
+- [ ] Azure OpenAI provider profile.
+- [ ] Ollama/local model provider profile.
+- [ ] Embedding-based vendor matching for larger vendor lists.
+- [ ] Human review queue for low-confidence extractions.
+- [ ] Minimal frontend for upload and result inspection.
+- [ ] Batch document processing endpoint.
+- [ ] Export results to CSV or Excel.
+- [ ] Persist processing history with EF Core.
+- [ ] Store uploaded images in Azure Blob Storage.
+- [ ] Add authentication/authorization.
+- [ ] Add rate limiting and quota controls.
+- [ ] Add OpenTelemetry traces and metrics.
+- [ ] Add prompt versioning and evaluation fixtures.
+- [ ] Add golden dataset evaluation for extraction accuracy.
+- [ ] Add multi-currency support.
+- [ ] Add tax/VAT validation rules.
+- [ ] Add purchase order matching.
+- [ ] Add duplicate invoice detection.
+- [ ] Add supplier onboarding workflow.
+- [ ] Add confidence scoring calibrated from validation outcomes.
+- [ ] Add Teams/Power Automate notification integration.
