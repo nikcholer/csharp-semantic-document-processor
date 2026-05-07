@@ -3,6 +3,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.SemanticKernel;
 using SemanticDocumentProcessor.Api.Configuration;
 using SemanticDocumentProcessor.Api.Endpoints;
+using SemanticDocumentProcessor.Api.Middleware;
 using SemanticDocumentProcessor.Api.Plugins;
 using SemanticDocumentProcessor.Api.Security;
 using SemanticDocumentProcessor.Api.Services;
@@ -70,6 +71,7 @@ builder.Services.ConfigureHttpJsonOptions(options =>
     options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
 });
 
+builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSingleton<IApiKeyProvider, EnvironmentApiKeyProvider>();
 builder.Services.AddScoped(sp =>
 {
@@ -101,6 +103,8 @@ builder.Services.AddScoped<ApprovalPolicyPlugin>();
 
 var app = builder.Build();
 
+app.UseMiddleware<CorrelationIdMiddleware>();
+
 app.MapGet("/health", (
     IOptions<AiSettings> options,
     IApiKeyProvider apiKeyProvider) =>
@@ -112,7 +116,11 @@ app.MapGet("/health", (
         AiProvider: settings.Provider,
         AiModel: settings.ModelId,
         ApiKeyConfigured: apiKeyProvider.HasApiKey(settings.ApiKeyEnvironmentVariable)));
-});
+})
+.WithName("Health")
+.WithSummary("Get API health")
+.WithDescription("Reports API readiness, configured AI provider/model, and whether the configured API key environment variable is present.")
+.Produces<HealthResponse>(StatusCodes.Status200OK);
 
 app.MapDocumentProcessingEndpoints();
 

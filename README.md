@@ -155,6 +155,17 @@ Responses include `modelUsage` with token counts for each model call and per-doc
 
 The API also emits structured log events named `ModelTokenUsage` and `DocumentModelUsage` with `FileName`, `SourceId`, `ModelId`, and token fields for downstream cost analysis.
 
+Every request receives an `X-Correlation-ID` response header. If the caller sends `X-Correlation-ID`, that value is used as the ASP.NET Core trace identifier; otherwise the server-generated trace identifier is returned. Error responses use a shared shape:
+
+```json
+{
+  "code": "invalid_document_upload",
+  "message": "Unsupported content type 'application/pdf'.",
+  "target": "image",
+  "traceId": "00-..."
+}
+```
+
 The included sample assets currently process as:
 
 - `assets/sample-doc1.png`: `Invoice`, vendor `Workspace Interiors Ltd`, total `967.20 GBP`
@@ -217,3 +228,19 @@ dotnet test .\tests\SemanticDocumentProcessor.Tests\SemanticDocumentProcessor.Te
 ```
 
 The tests cover deterministic vendor matching, approval policy boundaries, upload image validation, model JSON parsing failure paths, and orchestrator routing using fake classifier/extractor/policy services. The test project is run by project path so the existing solution build remains focused on the API project.
+
+## Container
+
+Build the API container:
+
+```powershell
+docker build -t semantic-document-processor .
+```
+
+Run it with the Together key supplied from the host environment:
+
+```powershell
+docker run --rm -p 8080:8080 -e TOGETHER_API_KEY=$env:TOGETHER_API_KEY semantic-document-processor
+```
+
+The repository includes a GitHub Actions workflow at `.github/workflows/build.yml` that restores, builds, and runs the unit tests.

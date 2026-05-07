@@ -1,0 +1,32 @@
+name: build
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore API
+        run: dotnet restore .\src\SemanticDocumentProcessor.Api\SemanticDocumentProcessor.Api.csproj
+
+      - name: Build API
+        run: dotnet build .\CSharpSemanticDocumentProcessor.sln --configuration Release --no-restore
+
+      - name: Restore tests
+        run: dotnet restore .\tests\SemanticDocumentProcessor.Tests\SemanticDocumentProcessor.Tests.csproj
+
+      - name: Test
+        run: dotnet test .\tests\SemanticDocumentProcessor.Tests\SemanticDocumentProcessor.Tests.csproj --configuration Release --no-restore

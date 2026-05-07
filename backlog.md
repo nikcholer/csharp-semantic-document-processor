@@ -115,12 +115,12 @@
 - [x] Add a short portfolio narrative explaining business value.
 
 ## Milestone 10: Polish
-- [ ] Add consistent error response format.
-- [ ] Add request correlation id in logs.
-- [ ] Add Swagger/OpenAPI metadata.
-- [ ] Add Dockerfile if it helps demo portability.
-- [ ] Add basic CI build/test workflow if repository hosting is planned.
-- [ ] Review code for secret leakage and noisy logs.
+- [x] Add consistent error response format.
+- [x] Add request correlation id in logs.
+- [x] Add Swagger/OpenAPI metadata.
+- [x] Add Dockerfile if it helps demo portability.
+- [x] Add basic CI build/test workflow if repository hosting is planned.
+- [x] Review code for secret leakage and noisy logs.
 
 ## Icebox
 - [ ] PDF input adapter using PDF-to-image rasterization.

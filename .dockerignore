@@ -1,0 +1,11 @@
+**/bin/
+**/obj/
+.git/
+.github/
+.vs/
+.idea/
+*.user
+*.suo
+*.env
+appsettings.Local.json
+appsettings.*.Local.json

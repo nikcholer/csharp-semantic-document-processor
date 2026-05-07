@@ -10,7 +10,14 @@ public static class DocumentProcessingEndpoints
     public static IEndpointRouteBuilder MapDocumentProcessingEndpoints(this IEndpointRouteBuilder endpoints)
     {
         endpoints.MapPost("/api/documents/process", ProcessDocumentAsync)
-            .WithName("ProcessDocument");
+            .WithName("ProcessDocument")
+            .WithSummary("Process a document image")
+            .WithDescription("Accepts a PNG or JPEG image, classifies it as an invoice, receipt, or unknown, extracts typed fields, evaluates policy, and returns model usage.")
+            .Accepts<IFormFile>("multipart/form-data")
+            .Produces<DocumentProcessingResponse>(StatusCodes.Status200OK)
+            .Produces<ApiErrorResponse>(StatusCodes.Status400BadRequest)
+            .Produces<ApiErrorResponse>(StatusCodes.Status502BadGateway)
+            .Produces<ApiErrorResponse>(StatusCodes.Status500InternalServerError);
 
         return endpoints;
     }
@@ -29,9 +36,11 @@ public static class DocumentProcessingEndpoints
 
         if (!request.HasFormContentType)
         {
-            return Results.BadRequest(new DocumentIntakeErrorResponse(
-                Field: "form",
-                Message: "Expected a multipart form request."));
+            return BadRequest(
+                request,
+                new DocumentIntakeErrorResponse(
+                    Field: "form",
+                    Message: "Expected a multipart form request."));
         }
 
         var form = await request.ReadFormAsync(cancellationToken);
@@ -39,9 +48,11 @@ public static class DocumentProcessingEndpoints
 
         if (image is null || image.Length == 0)
         {
-            return Results.BadRequest(new DocumentIntakeErrorResponse(
-                Field: settings.ImageFormFieldName,
-                Message: $"An uploaded image file is required in the '{settings.ImageFormFieldName}' form field."));
+            return BadRequest(
+                request,
+                new DocumentIntakeErrorResponse(
+                    Field: settings.ImageFormFieldName,
+                    Message: $"An uploaded image file is required in the '{settings.ImageFormFieldName}' form field."));
         }
 
         var validationError = imageValidator.Validate(
@@ -52,7 +63,7 @@ public static class DocumentProcessingEndpoints
             settings);
         if (validationError is not null)
         {
-            return Results.BadRequest(validationError);
+            return BadRequest(request, validationError);
         }
 
         await using var imageStream = image.OpenReadStream();
@@ -97,10 +108,11 @@ public static class DocumentProcessingEndpoints
                 "Classification failed for uploaded image {FileName}.",
                 metadata.FileName);
 
-            return Results.Problem(
-                title: "Document classification failed.",
-                detail: ex.Message,
-                statusCode: StatusCodes.Status502BadGateway);
+            return ProcessingError(
+                request,
+                StatusCodes.Status502BadGateway,
+                "classification_failed",
+                ex.Message);
         }
         catch (DocumentExtractionException ex)
         {
@@ -109,10 +121,11 @@ public static class DocumentProcessingEndpoints
                 "Extraction failed for uploaded image {FileName}.",
                 metadata.FileName);
 
-            return Results.Problem(
-                title: "Document extraction failed.",
-                detail: ex.Message,
-                statusCode: StatusCodes.Status502BadGateway);
+            return ProcessingError(
+                request,
+                StatusCodes.Status502BadGateway,
+                "extraction_failed",
+                ex.Message);
         }
         catch (DocumentPolicyException ex)
         {
@@ -121,11 +134,38 @@ public static class DocumentProcessingEndpoints
                 "Policy evaluation failed for uploaded image {FileName}.",
                 metadata.FileName);
 
-            return Results.Problem(
-                title: "Document policy evaluation failed.",
-                detail: ex.Message,
-                statusCode: StatusCodes.Status500InternalServerError);
+            return ProcessingError(
+                request,
+                StatusCodes.Status500InternalServerError,
+                "policy_evaluation_failed",
+                ex.Message);
         }
+    }
+
+    private static IResult BadRequest(
+        HttpRequest request,
+        DocumentIntakeErrorResponse validationError)
+    {
+        return Results.BadRequest(new ApiErrorResponse(
+            Code: "invalid_document_upload",
+            Message: validationError.Message,
+            Target: validationError.Field,
+            TraceId: request.HttpContext.TraceIdentifier));
+    }
+
+    private static IResult ProcessingError(
+        HttpRequest request,
+        int statusCode,
+        string code,
+        string message)
+    {
+        return Results.Json(
+            new ApiErrorResponse(
+                Code: code,
+                Message: message,
+                Target: null,
+                TraceId: request.HttpContext.TraceIdentifier),
+            statusCode: statusCode);
     }
 
     private static string? NormalizeOptionalValue(string? value)

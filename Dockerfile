@@ -1,0 +1,19 @@
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
+WORKDIR /app
+
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+COPY src/SemanticDocumentProcessor.Api/SemanticDocumentProcessor.Api.csproj src/SemanticDocumentProcessor.Api/
+RUN dotnet restore src/SemanticDocumentProcessor.Api/SemanticDocumentProcessor.Api.csproj
+COPY . .
+RUN dotnet publish src/SemanticDocumentProcessor.Api/SemanticDocumentProcessor.Api.csproj \
+    --configuration Release \
+    --output /app/publish \
+    --no-restore
+
+FROM runtime AS final
+WORKDIR /app
+COPY --from=build /app/publish .
+ENV ASPNETCORE_URLS=http://+:8080
+EXPOSE 8080
+ENTRYPOINT ["dotnet", "SemanticDocumentProcessor.Api.dll"]
