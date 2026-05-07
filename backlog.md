@@ -129,7 +129,7 @@
 - [ ] Ollama/local model provider profile.
 - [ ] Embedding-based vendor matching for larger vendor lists.
 - [ ] Human review queue for low-confidence extractions.
-- [ ] Minimal frontend for upload and result inspection.
+- [x] Minimal frontend for upload and result inspection.
 - [ ] Batch document processing endpoint.
 - [ ] Export results to CSV or Excel.
 - [ ] Persist processing history with EF Core.

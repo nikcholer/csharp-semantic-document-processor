@@ -104,6 +104,8 @@ builder.Services.AddScoped<ApprovalPolicyPlugin>();
 var app = builder.Build();
 
 app.UseMiddleware<CorrelationIdMiddleware>();
+app.UseDefaultFiles();
+app.UseStaticFiles();
 
 app.MapGet("/health", (
     IOptions<AiSettings> options,

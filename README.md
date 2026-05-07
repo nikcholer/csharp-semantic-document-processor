@@ -108,6 +108,12 @@ $env:TOGETHER_API_KEY = "your_key_here"
 dotnet run --project .\src\SemanticDocumentProcessor.Api\SemanticDocumentProcessor.Api.csproj
 ```
 
+Demo frontend:
+
+```http
+GET http://localhost:5275/
+```
+
 Health check:
 
 ```http
@@ -228,6 +234,12 @@ dotnet test .\tests\SemanticDocumentProcessor.Tests\SemanticDocumentProcessor.Te
 ```
 
 The tests cover deterministic vendor matching, approval policy boundaries, upload image validation, model JSON parsing failure paths, and orchestrator routing using fake classifier/extractor/policy services. The test project is run by project path so the existing solution build remains focused on the API project.
+
+## Demo Frontend
+
+The API serves a minimal browser UI from `src/SemanticDocumentProcessor.Api/wwwroot`. It supports image selection or drag-and-drop, optional `sourceId`, API health display, workflow status, extracted document fields, policy reasons, token totals, and raw JSON inspection.
+
+The frontend calls the same `POST /api/documents/process` endpoint used by the curl examples, so screenshots reflect the real API workflow rather than mocked data.
 
 ## Container
 
