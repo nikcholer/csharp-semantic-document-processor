@@ -4,6 +4,8 @@
 
 The business scenario is a lightweight accounts-payable intake workflow: receive a synthetic invoice or receipt image, classify it, extract only the fields needed by downstream systems, match vendors against an approved list, and return an auditable policy decision with token usage for cost tracking.
 
+![Demo frontend showing a processed receipt](assets/demo-frontend.png)
+
 The target architecture is Microsoft-centric at the application layer:
 
 - ASP.NET Core Minimal API
@@ -16,7 +18,7 @@ The initial provider target is Together AI using a configurable vision-capable o
 
 ## Current Status
 
-Milestones 1-9 are in place:
+The portfolio slice is complete:
 
 - solution file
 - Web API project
@@ -33,6 +35,9 @@ Milestones 1-9 are in place:
 - `DocumentProcessingOrchestrator` for classify, route, extract, evaluate, and aggregate response flow
 - xUnit tests for deterministic policy, validation, parsing, and orchestration paths
 - synthetic demo assets for the current invoice and receipt scope
+- browser frontend for upload, workflow inspection, policy results, token totals, and raw JSON
+- consistent API error responses with correlation IDs
+- Dockerfile and GitHub Actions build/test workflow
 
 Policy evaluation is implemented for the v1 invoice and receipt samples. The API endpoint handles upload validation and delegates the semantic workflow to the orchestrator.
 
@@ -256,3 +261,7 @@ docker run --rm -p 8080:8080 -e TOGETHER_API_KEY=$env:TOGETHER_API_KEY semantic-
 ```
 
 The repository includes a GitHub Actions workflow at `.github/workflows/build.yml` that restores, builds, and runs the unit tests.
+
+## License
+
+This project is licensed under the MIT License. See [LICENSE](LICENSE).
