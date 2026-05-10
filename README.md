@@ -222,6 +222,11 @@ This project demonstrates a pragmatic enterprise AI pattern for C# teams: use Mi
 
 The result is a small but realistic document-processing slice: it shows how to add AI into a .NET workflow without handing core business decisions to the model, and it produces typed, auditable responses that a finance or operations system could consume.
 
+Additional portfolio notes:
+
+- [Security considerations](docs/security-considerations.md)
+- [Corporate use cases](docs/corporate-use-cases.md)
+
 Policy verification without live model calls:
 
 ```powershell
