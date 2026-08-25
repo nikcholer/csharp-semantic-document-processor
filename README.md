@@ -1,5 +1,8 @@
 # C# Semantic Document Processor
 
+> [!IMPORTANT]
+> **Maintenance status:** This Semantic Kernel implementation is preserved as a stable reference and will remain publicly available, but no further feature development is planned. A Microsoft Agent Framework successor is in development and will be published soon, adding graph-based workflow orchestration and new document-processing capabilities. The successor will be linked here when it is publicly available.
+
 .NET 8 Web API portfolio project that classifies document images, extracts typed invoice or receipt data, and applies deterministic business policy checks through Microsoft Semantic Kernel.
 
 The business scenario is a lightweight accounts-payable intake workflow: receive a synthetic invoice or receipt image, classify it, extract only the fields needed by downstream systems, match vendors against an approved list, and return an auditable policy decision with token usage for cost tracking.
